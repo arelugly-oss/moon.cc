@@ -21,13 +21,16 @@ SMTP_PORT = 2525
 
 ALLOWED_EMAIL_DOMAINS = ['gmail.com', 'mail.com', 'ya.ru', 'yandex.ru']
 
-BASEDIR = os.path.dirname(os.path.abspath(__file__))
+import os
+
+# Определяем базовую папку проекта
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.path.join(BASEDIR, 'database.db')
-UPLOAD_FOLDER = os.path.join(BASEDIR, 'static/uploads')
-LOADER_FOLDER = os.path.join(BASEDIR, 'static/loader')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-LOADER_EXTENSIONS = {'exe', 'zip', 'rar'}
-DLL_EXTENSIONS = {'dll'}
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(LOADER_FOLDER, exist_ok=True)
@@ -1966,7 +1969,6 @@ def check_users():
     result += "</table>"
     conn.close()
     return result
-
-
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=False)
