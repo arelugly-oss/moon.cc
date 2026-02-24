@@ -1953,6 +1953,20 @@ def privacy():
 def refund():
     user = get_user_by_username(session['user'])
     return render_template('refund.html', user=user, username=session['user'])
+@app.route('/check-users')
+def check_users():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT username, password, email FROM users")
+    users = c.fetchall()
+    result = "<h3>Пользователи в базе данных на Replit:</h3>"
+    result += "<table border='1'><tr><th>Username</th><th>Password</th><th>Email</th></tr>"
+    for u in users:
+        result += f"<tr><td>{u['username']}</td><td>{u['password']}</td><td>{u['email']}</td></tr>"
+    result += "</table>"
+    conn.close()
+    return result
+
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='0.0.0.0', port=8080, debug=False)
