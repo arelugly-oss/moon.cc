@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Support{% endblock %}
+{% block content %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-headset"></i>
+        <div>
+            <h3>Support Center</h3>
+            <p class="section-desc">Get help with your issues</p>
+        </div>
+    </div>
+    <div class="support-options">
+        <a href="{{ site_settings.discord_link or '#' }}" target="_blank" class="support-card">
+            <i class="fab fa-discord"></i>
+            <h4>Discord</h4>
+            <p>Join our Discord server for live support</p>
+        </a>
+        <a href="{{ site_settings.telegram_link or '#' }}" target="_blank" class="support-card">
+            <i class="fab fa-telegram"></i>
+            <h4>Telegram</h4>
+            <p>Contact us via Telegram</p>
+        </a>
+        <a href="#create-ticket" class="support-card">
+            <i class="fas fa-ticket-alt"></i>
+            <h4>Create Ticket</h4>
+            <p>Submit a support request</p>
+        </a>
+    </div>
+</div>
+
+{% if tickets %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>Your Tickets</h3>
+            <p class="section-desc">View your submitted tickets</p>
+        </div>
+    </div>
+    <div class="tickets-list">
+        {% for tid, ticket in tickets.items()|sort(attribute='1.created', reverse=true) %}
+        <a href="{{ url_for('view_ticket', ticket_id=tid) }}" class="ticket-item">
+            <div class="ticket-info">
+                <span class="ticket-id">#{{ ticket.id }}</span>
+                <span class="ticket-subject">{{ ticket.subject }}</span>
+                <span class="ticket-category">{{ ticket.category }}</span>
+            </div>
+            <div class="ticket-meta">
+                <span class="ticket-date">{{ ticket.created }}</span>
+                <span class="ticket-status status-{{ ticket.status }}">{{ ticket.status }}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="content-section" id="create-ticket">
+    <div class="section-header">
+        <i class="fas fa-plus-circle"></i>
+        <div>
+            <h3>Create Ticket</h3>
+            <p class="section-desc">Submit a support request</p>
+        </div>
+    </div>
+    <form method="POST" class="ticket-form">
+        <div class="form-group">
+            <label for="subject">Subject:</label>
+            <input type="text" id="subject" name="subject" class="input-field" placeholder="Brief description of your issue" required>
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <select id="category" name="category" class="input-field" required>
+                <option value="">Select a category</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" class="input-field textarea" placeholder="Describe your issue in detail" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-paper-plane"></i> Submit Ticket
+        </button>
+    </form>
+</div>
+{% endblock %}

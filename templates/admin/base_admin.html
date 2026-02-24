@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phook+ Admin - {% block title %}Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar admin-sidebar">
+            <div class="profile-section">
+                <div class="admin-badge">
+                    <i class="fas fa-check-circle"></i> ADMIN
+                </div>
+                <h2 class="username">{{ username }}</h2>
+                <p class="user-info">UID: <span class="highlight">{{ user.uid }}</span></p>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="{{ url_for('admin_panel') }}" class="nav-item {% if request.endpoint == 'admin_panel' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-item {% if request.endpoint in ['admin_users', 'admin_user_detail'] %}active{% endif %}">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{{ url_for('admin_cheats') }}" class="nav-item {% if request.endpoint == 'admin_cheats' %}active{% endif %}">
+                    <i class="fas fa-gamepad"></i> Cheats
+                </a>
+                <a href="{{ url_for('admin_keys') }}" class="nav-item {% if request.endpoint == 'admin_keys' %}active{% endif %}">
+                    <i class="fas fa-key"></i> Keys
+                </a>
+                <a href="{{ url_for('admin_invites') }}" class="nav-item {% if request.endpoint == 'admin_invites' %}active{% endif %}">
+                    <i class="fas fa-envelope-open-text"></i> Invites
+                </a>
+                <a href="{{ url_for('admin_loader') }}" class="nav-item {% if request.endpoint == 'admin_loader' %}active{% endif %}">
+                    <i class="fas fa-download"></i> Loader
+                </a>
+                <a href="{{ url_for('admin_tickets') }}" class="nav-item {% if request.endpoint == 'admin_tickets' %}active{% endif %}">
+                    <i class="fas fa-ticket-alt"></i> Tickets
+                </a>
+                <a href="{{ url_for('admin_resellers') }}" class="nav-item {% if request.endpoint == 'admin_resellers' %}active{% endif %}">
+                    <i class="fas fa-store"></i> Resellers
+                </a>
+                <a href="{{ url_for('admin_settings') }}" class="nav-item {% if request.endpoint == 'admin_settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                <a href="{{ url_for('admin_api_docs') }}" class="nav-item {% if request.endpoint == 'admin_api_docs' %}active{% endif %}">
+                    <i class="fas fa-book"></i> API Docs
+                </a>
+            </nav>
+            
+            <div class="admin-back">
+                <a href="{{ url_for('subscriptions') }}" class="nav-item">
+                    <i class="fas fa-arrow-left"></i> Back to Site
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,266 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}API Documentation{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-book"></i> API Documentation</h1>
+    <p>Complete API reference for Phook+</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-link"></i>
+        <div>
+            <h3>Base URL</h3>
+            <p class="section-desc">All API endpoints use this base</p>
+        </div>
+    </div>
+    <div class="api-link-box" style="font-size:16px;">{{ base_url }}</div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-gamepad"></i>
+        <div>
+            <h3>Cheats API</h3>
+            <p class="section-desc">Endpoints for cheat information</p>
+        </div>
+    </div>
+    
+    <div class="api-doc-item">
+        <div class="api-method get">GET</div>
+        <code>/api/cheats</code>
+        <p>Get list of all active cheats</p>
+        <div class="api-response">
+            <strong>Response (RAW text, one cheat per line):</strong>
+            <pre>CheatName::Game::Type::Price::APILink::MainDLLUrl::ExtraDLLUrl</pre>
+        </div>
+        <div class="api-example">
+            <strong>Example:</strong>
+            <div class="api-link-box">{{ base_url }}/api/cheats</div>
+        </div>
+    </div>
+    
+    <div class="api-doc-item">
+        <div class="api-method post">POST</div>
+        <code>/api/cheat/&lt;token&gt;</code>
+        <p>Get cheat info</p>
+        <div class="api-response">
+            <strong>Response:</strong>
+            <pre>::ok::name=Name::Game::Type::Price::1/0::URL::exe::Method::URL::exe::Method</pre>
+            
+            <strong>Example:</strong>
+            <pre>::ok::AimBot::Valorant::legit::25.0::1::https://site.com/dlls/main.dll::VALORANT.exe::LoadLibrary::extra_dll::extra_dll_process::extra_dll_method=</pre>
+            
+            <strong>Error:</strong>
+            <pre>::error::Cheat not found</pre>
+        </div>
+    </div>
+    
+    <div class="api-doc-item">
+        <div class="api-method get">GET</div>
+        <code>/api/dll/&lt;token&gt;/main</code>
+        <p>Download main DLL file for cheat</p>
+    </div>
+    
+    <div class="api-doc-item">
+        <div class="api-method get">GET</div>
+        <code>/api/dll/&lt;token&gt;/extra</code>
+        <p>Download extra DLL file for cheat</p>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-users"></i>
+        <div>
+            <h3>Users API</h3>
+            <p class="section-desc">Endpoints for user information</p>
+        </div>
+    </div>
+
+    <div class="api-doc-item">
+        <div class="api-method post">POST</div>
+        <code>/api/keyless/strongspass/users/&lt;username&gt;/&lt;password&gt;</code>
+        <p>Get user data with authentication in URL path</p>
+        
+        <div class="api-response">
+            <strong>Endpoint:</strong>
+            <pre>POST /api/keyless/strongspass/users/{username}/{password}</pre>
+            
+            <strong>Response format:</strong>
+            <pre>username::password::avatar::joined_date::uid::api_link1::expiry1::api_link2::expiry2::...</pre>
+            
+            <strong>Examples:</strong>
+            <pre>Success: john::secret123::avatar.jpg::Jan 15 2024::123::https://.../api/cheat/abc123::2024-02-15 12:00
+    No user: User not found (404)
+    Wrong pass: Invalid password (401)</pre>
+            
+            <strong>Notes:</strong>
+            <p>Password must match exactly (case-sensitive)</p>
+            <p>Returns all active subscriptions</p>
+            <p>Format compatible with StrongSPass loader</p>
+            <p>Empty fields appear as empty between <code>::</code></p>
+        </div>
+    </div>
+    
+    <div class="api-doc-item">
+        <div class="api-method post">POST</div>
+        <code>/api/hwid/username/hwid-value</code>
+        <p>Bind HWID to user</p>
+        
+        <div class="api-response">
+            <strong>Usage:</strong>
+            <pre>POST /api/hwid/john/XXXX-XXXX-XXXX</pre>
+            
+            <strong>Add ?force=true to change existing HWID</strong>
+            
+            <strong>Responses:</strong>
+            <pre>::ok::HWID set::XXXX-XXXX-XXXX
+    ::ok::HWID updated::OLD::NEW
+    ::ok::HWID matches::CURRENT
+    
+    ::error::User not found
+    ::error::HWID exists::CURRENT
+    ::error::HWID in use::OTHER-USER</pre>
+            
+            <strong>Note:</strong> HWID can only be set once unless force=true
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>Your Cheats API Links</h3>
+            <p class="section-desc">Quick access to all cheat API endpoints</p>
+        </div>
+    </div>
+    
+    {% if cheats %}
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Cheat</th>
+                    <th>Game</th>
+                    <th>Type</th>
+                    <th>API Link</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cheat in cheats %}
+                <tr>
+                    <td><strong>{{ cheat.name }}</strong></td>
+                    <td>{{ cheat.game }}</td>
+                    <td>
+                        <span class="badge {% if cheat.cheat_type == 'release' %}badge-success{% else %}badge-warning{% endif %}">
+                            {{ cheat.cheat_type or 'crack' }}
+                        </span>
+                    </td>
+                    <td>
+                        <code class="key-code" style="font-size:11px;">{{ base_url }}/api/cheat/{{ cheat.api_token }}</code>
+                    </td>
+                    <td>
+                        <button class="btn-icon" onclick="copyLink('{{ base_url }}/api/cheat/{{ cheat.api_token }}')" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <a href="{{ base_url }}/api/cheat/{{ cheat.api_token }}" target="_blank" class="btn-icon" title="Open">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No cheats added yet. Add cheats in the Cheats section.</p>
+    {% endif %}
+</div>
+
+<style>
+.api-doc-item {
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.api-doc-item code {
+    background: var(--bg-input);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-left: 10px;
+}
+.api-doc-item p {
+    color: var(--text-secondary);
+    margin: 10px 0;
+    font-size: 14px;
+}
+.api-method {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.api-method.get {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+.api-method.post {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+.api-response {
+    margin-top: 15px;
+}
+.api-response strong {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+.api-response pre {
+    background: var(--bg-input);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    overflow-x: auto;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.api-example {
+    margin-top: 15px;
+}
+.api-example strong {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+.api-link-box {
+    background: var(--bg-input);
+    padding: 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    color: var(--text-primary);
+}
+.badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+</style>
+
+<script>
+function copyLink(link) {
+    navigator.clipboard.writeText(link).then(() => {
+        alert('Copied: ' + link);
+    });
+}
+</script>
+{% endblock %}

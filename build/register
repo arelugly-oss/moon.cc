@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phook+ - Register</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="static/CompImage/png.png" alt="Phook+" class="logo-img">
+            </a>
+            <div class="nav-links">
+                <a href="/login" class="nav-link">Login</a>
+                <a href="/register" class="nav-link">Register</a>
+                <a href="/terms" class="nav-link">Terms</a>
+                <a href="/privacy" class="nav-link">Privacy</a>
+                <a href="/refund" class="nav-link">Refund</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-logo">
+            <img src="static/CompImage/png.png" alt="Phook+" class="auth-logo-img">
+        </div>
+        
+        <h2>Create Account</h2>
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="input-field" required minlength="3">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="input-field" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="input-field" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Register</button>
+        </form>
+        <p class="auth-link">Already have an account? <a href="/login">Login</a></p>
+    </div>
+</div>
+
+    </main>
+    
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Phook+. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

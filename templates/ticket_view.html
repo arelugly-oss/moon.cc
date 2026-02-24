@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Ticket #{{ ticket.id }}{% endblock %}
+{% block content %}
+<div class="content-section">
+    <a href="{{ url_for('support') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Support</a>
+    <div class="ticket-header">
+        <div class="ticket-title">
+            <span class="ticket-id-large">#{{ ticket.id }}</span>
+            <h2>{{ ticket.subject }}</h2>
+        </div>
+        <span class="ticket-status status-{{ ticket.status }}">{{ ticket.status }}</span>
+    </div>
+    <div class="ticket-details">
+        <span><i class="fas fa-folder"></i> {{ ticket.category }}</span>
+        <span><i class="fas fa-clock"></i> {{ ticket.created }}</span>
+        <span><i class="fas fa-user"></i> {{ ticket.username }}</span>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="ticket-messages">
+        <div class="ticket-message original">
+            <div class="message-header">
+                <span class="message-author">{{ ticket.username }}</span>
+                <span class="message-date">{{ ticket.created }}</span>
+            </div>
+            <div class="message-content">{{ ticket.message }}</div>
+        </div>
+        
+        {% for reply in ticket.replies %}
+        <div class="ticket-message {% if reply.is_admin %}admin-reply{% endif %}">
+            <div class="message-header">
+                <span class="message-author">
+                    {{ reply.username }}
+                    {% if reply.is_admin %}<span class="admin-badge-small">Admin</span>{% endif %}
+                </span>
+                <span class="message-date">{{ reply.date }}</span>
+            </div>
+            <div class="message-content">{{ reply.message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if ticket.status != 'closed' %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-reply"></i>
+        <div>
+            <h3>Reply</h3>
+            <p class="section-desc">Add a response to this ticket</p>
+        </div>
+    </div>
+    <form method="POST" class="reply-form">
+        <div class="form-group">
+            <textarea name="reply" class="input-field textarea" placeholder="Type your reply..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-paper-plane"></i> Send Reply
+        </button>
+    </form>
+</div>
+{% else %}
+<div class="content-section">
+    <div class="ticket-closed-notice">
+        <i class="fas fa-lock"></i>
+        <p>This ticket has been closed</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

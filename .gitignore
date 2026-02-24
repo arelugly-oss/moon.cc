@@ -1,0 +1,20 @@
+# Большие файлы
+*.rar
+*.zip
+*.7z
+build/
+dist/
+*.exe
+*.dll
+
+# Python
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Базы данных
+*.db
+*.sqlite3

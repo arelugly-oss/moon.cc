@@ -1,0 +1,100 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Tickets{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-ticket-alt"></i> Ticket Management</h1>
+    <p>View and manage support tickets</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-folder"></i>
+        <div>
+            <h3>Categories</h3>
+            <p class="section-desc">Manage ticket categories</p>
+        </div>
+    </div>
+    <div class="categories-list">
+        {% for cat in categories %}
+        <div class="category-item">
+            <span>{{ cat }}</span>
+            <form method="POST" action="{{ url_for('manage_categories') }}" style="display:inline;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="idx" value="{{ loop.index0 }}">
+                <button type="submit" class="btn-icon btn-danger" onclick="return confirm('Delete?')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    <form method="POST" action="{{ url_for('manage_categories') }}" class="add-category-form">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="name" class="input-field" placeholder="New category name" required>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-plus"></i> Add
+        </button>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>All Tickets</h3>
+            <p class="section-desc">{{ tickets|length }} total tickets</p>
+        </div>
+    </div>
+    
+    {% if tickets %}
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tid, ticket in tickets.items()|sort(attribute='1.created', reverse=true) %}
+                <tr>
+                    <td><span class="uid-badge">#{{ ticket.id }}</span></td>
+                    <td><strong>{{ ticket.username }}</strong></td>
+                    <td>{{ ticket.subject[:40] }}{% if ticket.subject|length > 40 %}...{% endif %}</td>
+                    <td>{{ ticket.category }}</td>
+                    <td>{{ ticket.created }}</td>
+                    <td><span class="ticket-status status-{{ ticket.status }}">{{ ticket.status }}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ url_for('view_ticket', ticket_id=tid) }}" class="btn-icon" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if ticket.status != 'closed' %}
+                            <form method="POST" action="{{ url_for('close_ticket', ticket_id=tid) }}" style="display:inline;">
+                                <button type="submit" class="btn-icon" title="Close">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('delete_ticket', ticket_id=tid) }}" style="display:inline;" onsubmit="return confirm('Delete this ticket?')">
+                                <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No tickets yet</p>
+    {% endif %}
+</div>
+{% endblock %}

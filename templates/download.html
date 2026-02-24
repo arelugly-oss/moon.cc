@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Download{% endblock %}
+{% block content %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-download"></i>
+        <div>
+            <h3>Download Loader</h3>
+            <p class="section-desc">Get the latest version of our loader</p>
+        </div>
+    </div>
+    
+    {% if has_subscription %}
+        {% if loader.filename %}
+        <div class="download-content">
+            <div class="download-card">
+                <div class="download-icon">
+                    <i class="fas fa-desktop"></i>
+                </div>
+                <div class="download-info">
+                    <h4>Moon.cc Loader</h4>
+                    <p>Version {{ loader.version or '1.0.0' }} | Windows 10/11</p>
+                    <span class="download-size">{{ loader.filename }}</span>
+                </div>
+                <a href="{{ url_for('download_loader') }}" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-subscription-block">
+            <div class="lock-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h4>Coming Soon</h4>
+            <p>Loader is not available yet. Please check back later.</p>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="no-subscription-block">
+        <div class="lock-icon">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h4>Subscription Required</h4>
+        <p>You need an active subscription to download the loader.</p>
+        <a href="{{ url_for('subscriptions') }}" class="btn btn-secondary">
+            <i class="fas fa-shopping-cart"></i> Get Subscription
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <h3>Requirements</h3>
+            <p class="section-desc">System requirements for the loader</p>
+        </div>
+    </div>
+    <div class="requirements-list">
+        <div class="requirement-item">
+            <i class="fab fa-windows"></i>
+            <span>Windows 10/11 (64-bit)</span>
+        </div>
+        <div class="requirement-item">
+            <i class="fas fa-microchip"></i>
+            <span>Intel/AMD Processor</span>
+        </div>
+        <div class="requirement-item">
+            <i class="fas fa-memory"></i>
+            <span>4GB RAM minimum</span>
+        </div>
+        <div class="requirement-item">
+            <i class="fas fa-shield-alt"></i>
+            <span>Disable antivirus before running</span>
+        </div>
+    </div>
+</div>
+
+{% if loader.changelog %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-history"></i>
+        <div>
+            <h3>Changelog</h3>
+            <p class="section-desc">Recent updates</p>
+        </div>
+    </div>
+    <div class="changelog">
+        {% for entry in loader.changelog %}
+        <div class="changelog-item">
+            <span class="version">{{ entry.version }}</span>
+            <span class="date">{{ entry.date }}</span>
+            <ul>
+                {% for change in entry.changes %}
+                <li>{{ change }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

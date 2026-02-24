@@ -1,0 +1,130 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Loader{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-download"></i> Loader Management</h1>
+    <p>Upload and manage the loader file</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-upload"></i>
+        <div>
+            <h3>Upload Loader</h3>
+            <p class="section-desc">Upload a new loader file (exe, zip, rar)</p>
+        </div>
+    </div>
+    <form method="POST" enctype="multipart/form-data" class="loader-upload-form">
+        <input type="hidden" name="action" value="upload">
+        <div class="upload-area" onclick="document.getElementById('loaderFileInput').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click to select loader file</p>
+            <span>Supported: .exe, .zip, .rar (max 100MB)</span>
+            <input type="file" id="loaderFileInput" name="loader_file" accept=".exe,.zip,.rar" class="file-input" onchange="updateFileName(this)">
+        </div>
+        <p id="selectedFileName" class="selected-file"></p>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-upload"></i> Upload Loader
+        </button>
+    </form>
+    
+    {% if loader.filename %}
+    <div class="current-loader">
+        <h4>Current Loader</h4>
+        <div class="loader-info-card">
+            <i class="fas fa-file-archive"></i>
+            <div>
+                <strong>{{ loader.filename }}</strong>
+                <span>Version: {{ loader.version }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-tag"></i>
+        <div>
+            <h3>Version</h3>
+            <p class="section-desc">Update current loader version</p>
+        </div>
+    </div>
+    <form method="POST" class="version-form">
+        <input type="hidden" name="action" value="update_version">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Current Version:</label>
+                <input type="text" name="version" class="input-field" value="{{ loader.version or '1.0.0' }}" placeholder="1.0.0">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-save"></i> Update Version
+        </button>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-history"></i>
+        <div>
+            <h3>Changelog</h3>
+            <p class="section-desc">Manage version changelog</p>
+        </div>
+    </div>
+    
+    <form method="POST" class="changelog-form">
+        <input type="hidden" name="action" value="add_changelog">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Version:</label>
+                <input type="text" name="changelog_version" class="input-field" placeholder="v2.5.1" required>
+            </div>
+            <div class="form-group">
+                <label>Date:</label>
+                <input type="text" name="changelog_date" class="input-field" placeholder="January 7, 2026">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Changes (one per line):</label>
+            <textarea name="changelog_changes" class="input-field textarea" placeholder="Fixed injection issues&#10;Improved stability&#10;Updated security bypass" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-plus"></i> Add Changelog Entry
+        </button>
+    </form>
+    
+    {% if loader.changelog %}
+    <div class="changelog-list">
+        <h4>Existing Changelogs</h4>
+        {% for entry in loader.changelog %}
+        <div class="changelog-entry">
+            <div class="changelog-header">
+                <span class="changelog-version">{{ entry.version }}</span>
+                <span class="changelog-date">{{ entry.date }}</span>
+                <form method="POST" style="margin-left:auto;">
+                    <input type="hidden" name="action" value="delete_changelog">
+                    <input type="hidden" name="idx" value="{{ loop.index0 }}">
+                    <button type="submit" class="btn-icon btn-danger" onclick="return confirm('Delete this changelog?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+            <ul class="changelog-changes">
+                {% for change in entry.changes %}
+                <li>{{ change }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function updateFileName(input) {
+    const fileName = input.files[0] ? input.files[0].name : '';
+    document.getElementById('selectedFileName').textContent = fileName ? 'Selected: ' + fileName : '';
+}
+</script>
+{% endblock %}

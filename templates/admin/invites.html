@@ -1,0 +1,104 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Invite Codes{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-envelope-open-text"></i> Invite Codes</h1>
+    <p>Manage registration invite codes</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-plus"></i>
+        <div>
+            <h3>Generate Invite Codes</h3>
+            <p class="section-desc">Create new invite codes for registration</p>
+        </div>
+    </div>
+    <form method="POST" action="{{ url_for('generate_invites') }}" class="form-row">
+        <div class="form-group">
+            <label>Prefix:</label>
+            <input type="text" name="prefix" class="input-field" value="INV" placeholder="INV" maxlength="5">
+        </div>
+        <div class="form-group">
+            <label>Max Uses (0 = unlimited):</label>
+            <input type="number" name="max_uses" class="input-field" value="1" min="0">
+        </div>
+        <div class="form-group">
+            <label>Count:</label>
+            <input type="number" name="count" class="input-field" value="1" min="1" max="50">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+            <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-plus"></i> Generate
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>All Invite Codes</h3>
+            <p class="section-desc">{{ invites|length }} total codes</p>
+        </div>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Created</th>
+                    <th>Created By</th>
+                    <th>Uses</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invite in invites %}
+                <tr>
+                    <td>
+                        <code class="key-code" onclick="copyCode('{{ invite.code }}')">{{ invite.code }}</code>
+                    </td>
+                    <td>{{ invite.created }}</td>
+                    <td>{{ invite.created_by }}</td>
+                    <td>
+                        {{ invite.uses }}/{% if invite.max_uses > 0 %}{{ invite.max_uses }}{% else %}∞{% endif %}
+                    </td>
+                    <td>
+                        {% if invite.active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-inactive">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <form method="POST" action="{{ url_for('toggle_invite', invite_id=invite.id) }}" style="display:inline;">
+                                <button type="submit" class="btn-icon" title="Toggle">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('delete_invite', invite_id=invite.id) }}" style="display:inline;" onsubmit="return confirm('Delete this invite code?')">
+                                <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        alert('Code copied: ' + code);
+    });
+}
+</script>
+{% endblock %}

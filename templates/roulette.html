@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}Roulette{% endblock %}
+{% block content %}
+<div class="content-section roulette-section">
+    <div class="section-header">
+        <i class="fas fa-dice"></i>
+        <div>
+            <h3>Daily Roulette</h3>
+            <p class="section-desc">Spin once every 24 hours to win a subscription!</p>
+        </div>
+    </div>
+    
+    {% if not roulette_enabled %}
+    <div class="no-subscription-block">
+        <div class="lock-icon">
+            <i class="fas fa-ban"></i>
+        </div>
+        <h4>Roulette Disabled</h4>
+        <p>The roulette is currently disabled by administrators.</p>
+    </div>
+    {% else %}
+    <div class="roulette-container">
+        <div class="roulette-pointer"></div>
+        <div class="roulette-wrapper">
+            <div class="roulette-track" id="rouletteTrack">
+                {% for i in range(15) %}
+                {% set cheat = cheats[i % cheats|length] if cheats else none %}
+                {% if cheat %}
+                <div class="roulette-item">
+                    {% if cheat.icon_type == 'image' and cheat.icon %}
+                    <img src="{{ cheat.icon }}" class="roulette-icon-img" alt="">
+                    {% else %}
+                    <div class="roulette-icon">{{ cheat.icon or cheat.name[0] }}</div>
+                    {% endif %}
+                    <div class="roulette-item-info">
+                        <span class="roulette-cheat">{{ cheat.name }}</span>
+                        <span class="roulette-days">? days</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="roulette-controls">
+        {% if can_spin %}
+        <button class="btn btn-primary btn-spin" id="spinBtn" onclick="spinRoulette()">
+            <i class="fas fa-play"></i> SPIN
+        </button>
+        {% else %}
+        <div class="cooldown-info">
+            <i class="fas fa-clock"></i>
+            <span>Next spin in: <strong id="countdown">{{ time_left // 3600 }}h {{ (time_left % 3600) // 60 }}m</strong></span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <h3>How it works</h3>
+            <p class="section-desc">Rules and prizes</p>
+        </div>
+    </div>
+    <div class="roulette-info">
+        <div class="info-card">
+            <i class="fas fa-clock"></i>
+            <h4>Once per day</h4>
+            <p>You can spin the roulette once every 24 hours</p>
+        </div>
+        <div class="info-card">
+            <i class="fas fa-gift"></i>
+            <h4>Win subscriptions</h4>
+            <p>Get 1-30 days of any cheat subscription</p>
+        </div>
+        <div class="info-card">
+            <i class="fas fa-coins"></i>
+            <h4>Bonus LC Coins</h4>
+            <p>Also win 5-100 LC coins with each spin!</p>
+        </div>
+        <div class="info-card">
+            <i class="fas fa-check"></i>
+            <h4>Instant activation</h4>
+            <p>Your prize is added to your account immediately</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="winModal">
+    <div class="modal-content win-modal">
+        <div class="win-icon">🎉</div>
+        <h2>Congratulations!</h2>
+        <p class="win-text">You won:</p>
+        <div class="win-prize">
+            <span class="win-cheat" id="winCheat"></span>
+            <span class="win-days" id="winDays"></span>
+        </div>
+        <button class="btn btn-primary" onclick="closeModal()">OK</button>
+    </div>
+</div>
+
+<script>
+const cheats = {{ cheats|tojson }};
+let isSpinning = false;
+
+function spinRoulette() {
+    if (isSpinning || cheats.length === 0) return;
+    isSpinning = true;
+    
+    const btn = document.getElementById('spinBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Spinning...';
+    
+    fetch('/roulette/spin', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                location.reload();
+                return;
+            }
+            
+            // Build track with items
+            const track = document.getElementById('rouletteTrack');
+            track.innerHTML = '';
+            
+            data.items.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'roulette-item' + (item.winner ? ' winner' : '');
+                
+                let iconHtml;
+                if (item.icon_type === 'image' && item.icon) {
+                    iconHtml = `<img src="${item.icon}" class="roulette-icon-img" alt="">`;
+                } else {
+                    iconHtml = `<div class="roulette-icon">${item.icon || item.cheat_name[0]}</div>`;
+                }
+                
+                div.innerHTML = `
+                    ${iconHtml}
+                    <div class="roulette-item-info">
+                        <span class="roulette-cheat">${item.cheat_name}</span>
+                        <span class="roulette-days">${item.days} day${item.days > 1 ? 's' : ''}</span>
+                    </div>
+                `;
+                track.appendChild(div);
+            });
+            
+            // Animate
+            const itemWidth = 130; // 120px width + 10px gap
+            const targetPos = 45 * itemWidth - (track.parentElement.offsetWidth / 2) + (60);
+            
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                track.style.transition = 'transform 5s cubic-bezier(0.15, 0.85, 0.35, 1)';
+                track.style.transform = `translateX(-${targetPos}px)`;
+            }, 50);
+            
+            // Show result
+            setTimeout(() => {
+                if (data.prize.days === 0 && data.prize.coins === 0) {
+                    document.querySelector('.win-icon').textContent = '😢';
+                    document.querySelector('.win-modal h2').textContent = 'Better luck next time!';
+                    document.querySelector('.win-text').textContent = 'You got:';
+                    document.getElementById('winCheat').textContent = 'Nothing';
+                    document.getElementById('winDays').textContent = '0 days';
+                    document.getElementById('winDays').style.color = '#ef4444';
+                } else {
+                    document.querySelector('.win-icon').textContent = '🎉';
+                    document.querySelector('.win-modal h2').textContent = 'Congratulations!';
+                    document.querySelector('.win-text').textContent = 'You won:';
+                    
+                    let prizeText = '';
+                    if (data.prize.days > 0) {
+                        prizeText = `${data.prize.cheat_name} (${data.prize.game})`;
+                    }
+                    document.getElementById('winCheat').textContent = prizeText;
+                    
+                    let daysText = '';
+                    if (data.prize.days > 0) {
+                        daysText = `${data.prize.days} day${data.prize.days > 1 ? 's' : ''}`;
+                    }
+                    if (data.prize.coins > 0) {
+                        if (daysText) daysText += ' + ';
+                        daysText += `${data.prize.coins} LC`;
+                    }
+                    if (!daysText) daysText = '0 days';
+                    
+                    document.getElementById('winDays').textContent = daysText;
+                    document.getElementById('winDays').style.color = '#22c55e';
+                }
+                document.getElementById('winModal').classList.add('show');
+                isSpinning = false;
+            }, 5500);
+        })
+        .catch(err => {
+            alert('Error spinning');
+            location.reload();
+        });
+}
+
+function closeModal() {
+    document.getElementById('winModal').classList.remove('show');
+    location.reload();
+}
+
+{% if not can_spin and time_left > 0 %}
+let timeLeft = {{ time_left }};
+setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+        location.reload();
+        return;
+    }
+    const h = Math.floor(timeLeft / 3600);
+    const m = Math.floor((timeLeft % 3600) / 60);
+    const s = timeLeft % 60;
+    document.getElementById('countdown').textContent = `${h}h ${m}m ${s}s`;
+}, 1000);
+{% endif %}
+</script>
+{% endblock %}

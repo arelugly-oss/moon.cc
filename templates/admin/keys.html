@@ -1,0 +1,104 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Keys{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-key"></i> Key Management</h1>
+    <p>Generate and manage activation keys</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-plus-circle"></i>
+        <div>
+            <h3>Generate Keys</h3>
+            <p class="section-desc">Create new activation keys</p>
+        </div>
+    </div>
+    <form method="POST" action="{{ url_for('generate_keys') }}" class="generate-keys-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Cheat:</label>
+                <select name="cheat_id" class="input-field" required>
+                    <option value="">Select cheat</option>
+                    {% for cheat in cheats %}
+                    <option value="{{ cheat.id }}">{{ cheat.name }} ({{ cheat.game }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Days:</label>
+                <input type="number" name="days" value="30" min="1" max="365" class="input-field" required>
+            </div>
+            <div class="form-group">
+                <label>Count:</label>
+                <input type="number" name="count" value="1" min="1" max="100" class="input-field" required>
+            </div>
+            <div class="form-group">
+                <label>Prefix:</label>
+                <input type="text" name="prefix" value="RT" maxlength="5" class="input-field">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-magic"></i> Generate Keys
+        </button>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>All Keys</h3>
+            <p class="section-desc">{{ keys|length }} total keys</p>
+        </div>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Cheat</th>
+                    <th>Days</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Used By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, kdata in keys.items()|list|reverse %}
+                <tr>
+                    <td><code class="key-code">{{ key }}</code></td>
+                    <td>
+                        {% set cheat = cheats|selectattr('id', 'eq', kdata.cheat_id)|first %}
+                        {{ cheat.name if cheat else 'Unknown' }}
+                    </td>
+                    <td>{{ kdata.days }} days</td>
+                    <td>{{ kdata.created }}</td>
+                    <td>
+                        {% if kdata.used %}
+                        <span class="badge badge-inactive">Used</span>
+                        {% else %}
+                        <span class="badge badge-success">Available</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ kdata.used_by or '-' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" onclick="navigator.clipboard.writeText('{{ key }}')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('delete_key', key=key) }}" style="display:inline;" onsubmit="return confirm('Delete this key?')">
+                                <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

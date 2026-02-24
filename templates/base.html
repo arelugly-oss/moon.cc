@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moon.cc - {% block title %}Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="profile-section">
+                <div class="avatar">
+                    {% if user.avatar %}
+                    <img src="{{ user.avatar }}" alt="Avatar" onerror="this.src='https://via.placeholder.com/120/1a1a2e/ffffff?text={{ username[0]|upper }}'">
+                    {% else %}
+                    <div class="avatar-letter">{{ username[0]|upper }}</div>
+                    {% endif %}
+                </div>
+                <h2 class="username">{{ username }}</h2>
+                <p class="user-info">Joined: <span class="highlight">{{ user.joined }}</span> UID: <span class="highlight">{{ user.uid }}</span></p>
+                {% if user.bio %}
+                <p class="user-bio">{{ user.bio }}</p>
+                {% endif %}
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="{{ url_for('subscriptions') }}" class="nav-item {% if request.endpoint == 'subscriptions' %}active{% endif %}">
+                    <i class="fas fa-user"></i> Subscriptions
+                </a>
+                <a href="{{ url_for('cloud') }}" class="nav-item {% if request.endpoint == 'cloud' %}active{% endif %}">
+                    <i class="fas fa-cloud"></i> Cloud
+                </a>
+                <a href="{{ url_for('security') }}" class="nav-item {% if request.endpoint == 'security' %}active{% endif %}">
+                    <i class="fas fa-shield-alt"></i> Security
+                </a>
+                <a href="{{ url_for('support') }}" class="nav-item {% if request.endpoint == 'support' %}active{% endif %}">
+                    <i class="fas fa-question-circle"></i> Support
+                </a>
+                <a href="{{ url_for('download') }}" class="nav-item {% if request.endpoint == 'download' %}active{% endif %}">
+                    <i class="fas fa-download"></i> Download Loader
+                </a>
+                <a href="{{ url_for('roulette') }}" class="nav-item {% if request.endpoint == 'roulette' %}active{% endif %}">
+                    <i class="fas fa-dice"></i> Roulette
+                </a>
+                {% if user.is_admin %}
+                <a href="{{ url_for('admin_panel') }}" class="nav-item nav-admin {% if 'admin' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-crown"></i> Admin Panel
+                </a>
+                {% endif %}
+            </nav>
+            
+            <div class="resellers-section">
+                <p class="section-label">Resellers</p>
+                {% for reseller in site_settings.resellers %}
+                <a href="{{ reseller.link }}" class="nav-item reseller">
+                    {% if reseller.flag %}
+                    <span class="flag">{{ reseller.flag }}</span>
+                    {% elif reseller.online %}
+                    <span class="status-dot online"></span>
+                    {% endif %}
+                    {{ reseller.name }}
+                </a>
+                {% endfor %}
+            </div>
+            
+            <footer class="sidebar-footer">
+                <div class="footer-links">
+                    <a href="{{ url_for('terms') }}">Terms of Service</a>
+                    <a href="{{ url_for('privacy') }}">Privacy</a>
+                    <a href="{{ url_for('refund') }}">Refund Policy</a>
+                </div>
+                <div class="footer-copyright-row">
+                    <img src="{{ url_for('static', filename='CompImage/png.png') }}" alt="Moon.cc" class="footer-logo-img">
+                    <p class="copyright">© 2025 - 2026</p>
+                </div>
+                <p class="website-by">Website by <a href="https://t.me/mikuu0r" target="_blank">@mikuu0r</a></p>
+                <a href="{{ url_for('logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </footer>
+        </aside>
+        
+        <main class="main-content">
+            
+            <div class="content-section coins-section">
+                <div class="coins-row">
+                    <div class="coins-info">
+                        <i class="fas fa-coins"></i>
+                        <span class="coins-label">Your Balance:</span>
+                        <span class="coins-amount" id="userCoins">{{ user.coins or 0 }}</span>
+                        <span class="coins-currency">LC</span>
+                    </div>
+                    <button class="btn btn-secondary btn-daily" id="claimDailyBtn" onclick="claimDaily()">
+                        <i class="fas fa-gift"></i> Claim Daily
+                    </button>
+                </div>
+                <div class="streak-row" id="streakInfo">
+                    {% if user.login_streak and user.login_streak > 0 %}
+                    <span class="streak-badge"><i class="fas fa-fire"></i> {{ user.login_streak }} day streak</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+<style>
+.coins-section {
+    margin-bottom: 20px;
+}
+.coins-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+.coins-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: #8a8a8f;
+}
+.coins-info i {
+    font-size: 18px;
+    color: #6366f1;
+}
+.coins-label {
+    color: #8a8a8f;
+}
+.coins-amount {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+.coins-currency {
+    color: #6366f1;
+    font-weight: 500;
+}
+.btn-daily {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+.streak-row {
+    margin-top: 8px;
+}
+.streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+.streak-badge i {
+    color: #f97316;
+}
+.daily-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    background: #141418;
+    border: 1px solid #2a2a2f;
+    border-radius: 10px;
+    color: #fff;
+    z-index: 10000;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+.daily-toast.error {
+    border-color: #ef4444;
+}
+.daily-toast.success {
+    border-color: #6366f1;
+}
+.daily-toast .coins-earned {
+    font-size: 20px;
+    font-weight: bold;
+    color: #6366f1;
+}
+.daily-toast .streak-info-toast {
+    font-size: 12px;
+    color: #8a8a8f;
+    margin-top: 5px;
+}
+</style>
+
+<script>
+function claimDaily() {
+    const btn = document.getElementById('claimDailyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Claiming...';
+    
+    fetch('/claim-daily', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('userCoins').textContent = data.new_balance;
+                updateStreakDisplay(data.streak);
+                showDailyToast(data.coins, data.streak, data.bonus_coins);
+            } else {
+                showDailyToast(0, 0, 0, data.error || 'Already claimed today');
+            }
+        })
+        .catch(err => {
+            showDailyToast(0, 0, 0, 'Already claimed today');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-gift"></i> Claim Daily';
+        });
+}
+
+function updateStreakDisplay(streak) {
+    const streakRow = document.getElementById('streakInfo');
+    if (streak > 0) {
+        streakRow.innerHTML = `<span class="streak-badge"><i class="fas fa-fire"></i> ${streak} day streak</span>`;
+    }
+}
+
+function showDailyToast(coins, streak, bonus, error) {
+    const existing = document.querySelector('.daily-toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'daily-toast ' + (error ? 'error' : 'success');
+    
+    if (error) {
+        toast.innerHTML = `<i class="fas fa-times-circle"></i> ${error}`;
+    } else {
+        toast.innerHTML = `
+            <div class="coins-earned">+${coins} LC</div>
+            <div class="streak-info-toast">
+                <i class="fas fa-fire"></i> ${streak} day streak
+                ${bonus > 0 ? `(+${bonus} bonus)` : ''}
+            </div>
+        `;
+    }
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+</script>
+</body>
+</html>

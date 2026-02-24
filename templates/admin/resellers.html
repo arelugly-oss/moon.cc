@@ -1,0 +1,120 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Resellers{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-store"></i> Reseller Management</h1>
+    <p>Manage reseller links in sidebar</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-plus"></i>
+        <div>
+            <h3>Add Reseller</h3>
+            <p class="section-desc">Add a new reseller to the sidebar</p>
+        </div>
+    </div>
+    <form method="POST" class="add-reseller-form">
+        <input type="hidden" name="action" value="add">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" name="name" class="input-field" placeholder="Reseller name" required>
+            </div>
+            <div class="form-group">
+                <label>Country Flag:</label>
+                <select name="flag" class="input-field flag-select">
+                    <option value="">No flag</option>
+                    <option value="🇷🇺">🇷🇺 Russia</option>
+                    <option value="🇺🇸">🇺🇸 USA</option>
+                    <option value="🇬🇧">🇬🇧 UK</option>
+                    <option value="🇩🇪">🇩🇪 Germany</option>
+                    <option value="🇫🇷">🇫🇷 France</option>
+                    <option value="🇨🇳">🇨🇳 China</option>
+                    <option value="🇯🇵">🇯🇵 Japan</option>
+                    <option value="🇰🇷">🇰🇷 South Korea</option>
+                    <option value="🇧🇷">🇧🇷 Brazil</option>
+                    <option value="🇮🇳">🇮🇳 India</option>
+                    <option value="🇹🇷">🇹🇷 Turkey</option>
+                    <option value="🇵🇱">🇵🇱 Poland</option>
+                    <option value="🇺🇦">🇺🇦 Ukraine</option>
+                    <option value="🇰🇿">🇰🇿 Kazakhstan</option>
+                    <option value="🇧🇾">🇧🇾 Belarus</option>
+                    <option value="🇪🇸">🇪🇸 Spain</option>
+                    <option value="🇮🇹">🇮🇹 Italy</option>
+                    <option value="🇳🇱">🇳🇱 Netherlands</option>
+                    <option value="🇸🇪">🇸🇪 Sweden</option>
+                    <option value="🇳🇴">🇳🇴 Norway</option>
+                    <option value="🇫🇮">🇫🇮 Finland</option>
+                    <option value="🇨🇦">🇨🇦 Canada</option>
+                    <option value="🇦🇺">🇦🇺 Australia</option>
+                    <option value="🇲🇽">🇲🇽 Mexico</option>
+                    <option value="🇦🇷">🇦🇷 Argentina</option>
+                    <option value="🇨🇿">🇨🇿 Czech Republic</option>
+                    <option value="🇷🇴">🇷🇴 Romania</option>
+                    <option value="🇭🇺">🇭🇺 Hungary</option>
+                    <option value="🇵🇹">🇵🇹 Portugal</option>
+                    <option value="🇬🇷">🇬🇷 Greece</option>
+                    <option value="🇮🇱">🇮🇱 Israel</option>
+                    <option value="🇦🇪">🇦🇪 UAE</option>
+                    <option value="🇸🇦">🇸🇦 Saudi Arabia</option>
+                    <option value="🇹🇭">🇹🇭 Thailand</option>
+                    <option value="🇻🇳">🇻🇳 Vietnam</option>
+                    <option value="🇮🇩">🇮🇩 Indonesia</option>
+                    <option value="🇵🇭">🇵🇭 Philippines</option>
+                    <option value="🇲🇾">🇲🇾 Malaysia</option>
+                    <option value="🇸🇬">🇸🇬 Singapore</option>
+                    <option value="🌍">🌍 International</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Link:</label>
+                <input type="text" name="link" class="input-field" placeholder="https://..." required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-plus"></i> Add Reseller
+        </button>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>Current Resellers</h3>
+            <p class="section-desc">All resellers shown in sidebar</p>
+        </div>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Flag</th>
+                    <th>Name</th>
+                    <th>Link</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reseller in resellers %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td class="flag-cell">{{ reseller.flag or '—' }}</td>
+                    <td><strong>{{ reseller.name }}</strong></td>
+                    <td><a href="{{ reseller.link }}" target="_blank">{{ reseller.link }}</a></td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_reseller', idx=loop.index0) }}" style="display:inline;" onsubmit="return confirm('Delete this reseller?')">
+                            <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

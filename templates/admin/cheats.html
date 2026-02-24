@@ -1,0 +1,622 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Cheats{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-gamepad"></i> Cheat Management</h1>
+    <p>Manage available cheats and products</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-plus"></i>
+        <div>
+            <h3>Add New Cheat</h3>
+            <p class="section-desc">Add a new product to the store</p>
+        </div>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="openAddCheatModal()">
+        <i class="fas fa-plus"></i> Add New Cheat
+    </button>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-list"></i>
+        <div>
+            <h3>Current Cheats</h3>
+            <p class="section-desc">All available products</p>
+        </div>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Icon</th>
+                    <th>Game</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>API Link</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cheat in cheats %}
+                <tr>
+                    <td>{{ cheat.id }}</td>
+                    <td>
+                        {% if cheat.icon_type == 'image' and cheat.icon %}
+                        <img src="{{ cheat.icon }}" class="cheat-icon-img" alt="">
+                        {% else %}
+                        <div class="cheat-icon">{{ cheat.icon or cheat.name[0] }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ cheat.game }}</td>
+                    <td><strong>{{ cheat.name }}</strong></td>
+                    <td>
+                        <span class="badge {% if cheat.cheat_type == 'release' %}badge-success{% else %}badge-warning{% endif %}">
+                            {{ cheat.cheat_type or 'crack' }}
+                        </span>
+                    </td>
+                    <td>${{ cheat.price }}</td>
+                    <td>
+                        {% if cheat.active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cheat.api_token %}
+                        <button class="btn-icon" onclick="copyApiLink('{{ cheat.api_token }}')" title="Copy API Link">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" onclick="viewCheatDetails({{ cheat.id }})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon" onclick="openEditCheatModal({{ cheat.id }})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('toggle_cheat', cheat_id=cheat.id) }}" style="display:inline;">
+                                <button type="submit" class="btn-icon" title="Toggle Status">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('delete_cheat', cheat_id=cheat.id) }}" style="display:inline;" onsubmit="return confirm('Delete this cheat?')">
+                                <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<div id="addCheatModal" class="modal" style="display:none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus"></i> Add New Cheat</h3>
+            <button type="button" class="modal-close" onclick="closeAddCheatModal()">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('add_cheat') }}" enctype="multipart/form-data">
+            <div class="modal-body">
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-info-circle"></i> Basic Info</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cheat Name *</label>
+                            <input type="text" name="name" class="input-field" placeholder="e.g. Phook" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Game *</label>
+                            <input type="text" name="game" class="input-field" placeholder="e.g. CS:2, Rust" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Type *</label>
+                            <select name="cheat_type" class="input-field">
+                                <option value="crack">Crack</option>
+                                <option value="release">Release</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price ($)</label>
+                            <input type="number" name="price" class="input-field" placeholder="0 = free" step="0.01" value="0">
+                            <small class="form-hint">0 = без выбора ресселера</small>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-image"></i> Icon</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Icon Type</label>
+                            <select name="icon_type" class="input-field" id="iconTypeSelect" onchange="toggleIconInput()">
+                                <option value="text">Text (letters)</option>
+                                <option value="image">Image</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="iconTextGroup">
+                            <label>Icon Text</label>
+                            <input type="text" name="icon" class="input-field" placeholder="LC" maxlength="3">
+                        </div>
+                        <div class="form-group" id="iconFileGroup" style="display:none;">
+                            <label>Icon File</label>
+                            <input type="file" name="icon_file" class="input-field" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-file-code"></i> Main DLL</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DLL File *</label>
+                            <input type="file" name="main_dll" class="input-field" accept=".dll">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Process</label>
+                            <input type="text" name="main_dll_process" class="input-field" placeholder="e.g. cs2.exe">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Injection Method</label>
+                        <select name="main_dll_method" class="input-field">
+                            <option value="LoadLibrary">LoadLibrary</option>
+                            <option value="ManualMap">Manual Map</option>
+                            <option value="LdrLoadDll">LdrLoadDll</option>
+                            <option value="LdrpLoadDll">LdrpLoadDll</option>
+                            <option value="NtCreateThreadEx">NtCreateThreadEx</option>
+                            <option value="ThreadHijacking">Thread Hijacking</option>
+                            <option value="SetWindowsHookEx">SetWindowsHookEx</option>
+                            <option value="QueueUserAPC">QueueUserAPC</option>
+                            <option value="RtlCreateUserThread">RtlCreateUserThread</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4><i class="fas fa-file-code"></i> Extra DLL (Optional)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DLL File</label>
+                            <input type="file" name="extra_dll" class="input-field" accept=".dll">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Process</label>
+                            <input type="text" name="extra_dll_process" class="input-field" placeholder="e.g. cs2.exe">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Injection Method</label>
+                        <select name="extra_dll_method" class="input-field">
+                            <option value="LoadLibrary">LoadLibrary</option>
+                            <option value="ManualMap">Manual Map</option>
+                            <option value="LdrLoadDll">LdrLoadDll</option>
+                            <option value="LdrpLoadDll">LdrpLoadDll</option>
+                            <option value="NtCreateThreadEx">NtCreateThreadEx</option>
+                            <option value="ThreadHijacking">Thread Hijacking</option>
+                            <option value="SetWindowsHookEx">SetWindowsHookEx</option>
+                            <option value="QueueUserAPC">QueueUserAPC</option>
+                            <option value="RtlCreateUserThread">RtlCreateUserThread</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddCheatModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Cheat</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="viewCheatModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-eye"></i> Cheat Details</h3>
+            <button type="button" class="modal-close" onclick="closeViewModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="cheatDetailsContent">
+            Loading...
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="editCheatModal" class="modal" style="display:none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Edit Cheat</h3>
+            <button type="button" class="modal-close" onclick="closeEditCheatModal()">&times;</button>
+        </div>
+        <form method="POST" id="editCheatForm" enctype="multipart/form-data">
+            <div class="modal-body">
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-info-circle"></i> Basic Info</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cheat Name *</label>
+                            <input type="text" name="name" id="edit_name" class="input-field" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Game *</label>
+                            <input type="text" name="game" id="edit_game" class="input-field" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Type *</label>
+                            <select name="cheat_type" id="edit_cheat_type" class="input-field">
+                                <option value="crack">Crack</option>
+                                <option value="release">Release</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price ($)</label>
+                            <input type="number" name="price" id="edit_price" class="input-field" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-image"></i> Icon</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Icon Type</label>
+                            <select name="icon_type" class="input-field" id="editIconTypeSelect" onchange="toggleEditIconInput()">
+                                <option value="text">Text (letters)</option>
+                                <option value="image">Image</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="editIconTextGroup">
+                            <label>Icon Text</label>
+                            <input type="text" name="icon" id="edit_icon" class="input-field" maxlength="3">
+                        </div>
+                        <div class="form-group" id="editIconFileGroup" style="display:none;">
+                            <label>Icon File (leave empty to keep current)</label>
+                            <input type="file" name="icon_file" class="input-field" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-file-code"></i> Main DLL</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DLL File (leave empty to keep current)</label>
+                            <input type="file" name="main_dll" class="input-field" accept=".dll">
+                            <small class="form-hint" id="edit_main_dll_current"></small>
+                        </div>
+                        <div class="form-group">
+                            <label>Target Process</label>
+                            <input type="text" name="main_dll_process" id="edit_main_dll_process" class="input-field">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Injection Method</label>
+                        <select name="main_dll_method" id="edit_main_dll_method" class="input-field">
+                            <option value="LoadLibrary">LoadLibrary</option>
+                            <option value="ManualMap">Manual Map</option>
+                            <option value="LdrLoadDll">LdrLoadDll</option>
+                            <option value="LdrpLoadDll">LdrpLoadDll</option>
+                            <option value="NtCreateThreadEx">NtCreateThreadEx</option>
+                            <option value="ThreadHijacking">Thread Hijacking</option>
+                            <option value="SetWindowsHookEx">SetWindowsHookEx</option>
+                            <option value="QueueUserAPC">QueueUserAPC</option>
+                            <option value="RtlCreateUserThread">RtlCreateUserThread</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4><i class="fas fa-file-code"></i> Extra DLL (Optional)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DLL File (leave empty to keep current)</label>
+                            <input type="file" name="extra_dll" class="input-field" accept=".dll">
+                            <small class="form-hint" id="edit_extra_dll_current"></small>
+                        </div>
+                        <div class="form-group">
+                            <label>Target Process</label>
+                            <input type="text" name="extra_dll_process" id="edit_extra_dll_process" class="input-field">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Injection Method</label>
+                        <select name="extra_dll_method" id="edit_extra_dll_method" class="input-field">
+                            <option value="LoadLibrary">LoadLibrary</option>
+                            <option value="ManualMap">Manual Map</option>
+                            <option value="LdrLoadDll">LdrLoadDll</option>
+                            <option value="LdrpLoadDll">LdrpLoadDll</option>
+                            <option value="NtCreateThreadEx">NtCreateThreadEx</option>
+                            <option value="ThreadHijacking">Thread Hijacking</option>
+                            <option value="SetWindowsHookEx">SetWindowsHookEx</option>
+                            <option value="QueueUserAPC">QueueUserAPC</option>
+                            <option value="RtlCreateUserThread">RtlCreateUserThread</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditCheatModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: #1a1a1f;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-large {
+    max-width: 700px;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #2a2a2f;
+}
+.modal-header h3 {
+    margin: 0;
+    color: #fff;
+}
+.modal-close {
+    background: none;
+    border: none;
+    color: #8a8a8f;
+    font-size: 24px;
+    cursor: pointer;
+}
+.modal-close:hover {
+    color: #fff;
+}
+.modal-body {
+    padding: 20px;
+}
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #2a2a2f;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.form-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #2a2a2f;
+}
+.form-section:last-child {
+    border-bottom: none;
+}
+.form-section h4 {
+    color: #8a8a8f;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+.form-row .form-group {
+    flex: 1;
+}
+.form-hint {
+    color: #5a5a5f;
+    font-size: 11px;
+    margin-top: 4px;
+    display: block;
+}
+.badge-warning {
+    background: #f59e0b;
+    color: #000;
+}
+.detail-item {
+    margin-bottom: 12px;
+}
+.detail-label {
+    color: #8a8a8f;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+.detail-value {
+    color: #fff;
+    word-break: break-all;
+}
+.api-link-box {
+    background: #0d0d0f;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    word-break: break-all;
+}
+</style>
+
+<script>
+const cheatsData = {{ cheats|tojson|safe }}.reduce((acc, cheat) => {
+    acc[cheat.id] = {
+        name: cheat.name || '',
+        game: cheat.game || '',
+        type: cheat.cheat_type || 'crack',
+        price: cheat.price || 0,
+        icon: cheat.icon || '',
+        icon_type: cheat.icon_type || 'text',
+        main_dll: cheat.main_dll || '',
+        main_dll_process: cheat.main_dll_process || '',
+        main_dll_method: cheat.main_dll_method || 'LoadLibrary',
+        extra_dll: cheat.extra_dll || '',
+        extra_dll_process: cheat.extra_dll_process || '',
+        extra_dll_method: cheat.extra_dll_method || 'LoadLibrary',
+        api_token: cheat.api_token || ''
+    };
+    return acc;
+}, {});
+
+function openAddCheatModal() {
+    document.getElementById('addCheatModal').style.display = 'flex';
+}
+
+function closeAddCheatModal() {
+    document.getElementById('addCheatModal').style.display = 'none';
+}
+
+function toggleIconInput() {
+    const type = document.getElementById('iconTypeSelect').value;
+    document.getElementById('iconTextGroup').style.display = type === 'text' ? 'block' : 'none';
+    document.getElementById('iconFileGroup').style.display = type === 'image' ? 'block' : 'none';
+}
+
+function viewCheatDetails(id) {
+    const cheat = cheatsData[id];
+    if (!cheat) return;
+    
+    const apiUrl = cheat.api_token ? `${window.location.origin}/api/cheat/${cheat.api_token}` : 'N/A';
+    
+    document.getElementById('cheatDetailsContent').innerHTML = `
+        <div class="detail-item">
+            <div class="detail-label">Name</div>
+            <div class="detail-value">${cheat.name}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Game</div>
+            <div class="detail-value">${cheat.game}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Type</div>
+            <div class="detail-value">${cheat.type}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Price</div>
+            <div class="detail-value">$${cheat.price}</div>
+        </div>
+        <hr style="border-color:#2a2a2f;margin:15px 0;">
+        <div class="detail-item">
+            <div class="detail-label">Main DLL</div>
+            <div class="detail-value">${cheat.main_dll || 'Not set'}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Main DLL Process</div>
+            <div class="detail-value">${cheat.main_dll_process || 'Not set'}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Main DLL Method</div>
+            <div class="detail-value">${cheat.main_dll_method}</div>
+        </div>
+        <hr style="border-color:#2a2a2f;margin:15px 0;">
+        <div class="detail-item">
+            <div class="detail-label">Extra DLL</div>
+            <div class="detail-value">${cheat.extra_dll || 'Not set'}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Extra DLL Process</div>
+            <div class="detail-value">${cheat.extra_dll_process || 'Not set'}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Extra DLL Method</div>
+            <div class="detail-value">${cheat.extra_dll_method}</div>
+        </div>
+        <hr style="border-color:#2a2a2f;margin:15px 0;">
+        <div class="detail-item">
+            <div class="detail-label">API Link (RAW)</div>
+            <div class="api-link-box">${apiUrl}</div>
+        </div>
+    `;
+    document.getElementById('viewCheatModal').style.display = 'flex';
+}
+
+function closeViewModal() {
+    document.getElementById('viewCheatModal').style.display = 'none';
+}
+
+function openEditCheatModal(id) {
+    const cheat = cheatsData[id];
+    if (!cheat) return;
+    
+    document.getElementById('edit_name').value = cheat.name;
+    document.getElementById('edit_game').value = cheat.game;
+    document.getElementById('edit_cheat_type').value = cheat.type;
+    document.getElementById('edit_price').value = cheat.price;
+    document.getElementById('edit_icon').value = cheat.icon;
+    document.getElementById('editIconTypeSelect').value = cheat.icon_type;
+    document.getElementById('edit_main_dll_process').value = cheat.main_dll_process;
+    document.getElementById('edit_main_dll_method').value = cheat.main_dll_method;
+    document.getElementById('edit_extra_dll_process').value = cheat.extra_dll_process;
+    document.getElementById('edit_extra_dll_method').value = cheat.extra_dll_method;
+    
+    document.getElementById('edit_main_dll_current').textContent = cheat.main_dll ? `Current: ${cheat.main_dll}` : 'No DLL set';
+    document.getElementById('edit_extra_dll_current').textContent = cheat.extra_dll ? `Current: ${cheat.extra_dll}` : 'No DLL set';
+    
+    document.getElementById('editCheatForm').action = `/admin/cheats/${id}/edit`;
+    
+    toggleEditIconInput();
+    document.getElementById('editCheatModal').style.display = 'flex';
+}
+
+function closeEditCheatModal() {
+    document.getElementById('editCheatModal').style.display = 'none';
+}
+
+function toggleEditIconInput() {
+    const type = document.getElementById('editIconTypeSelect').value;
+    document.getElementById('editIconTextGroup').style.display = type === 'text' ? 'block' : 'none';
+    document.getElementById('editIconFileGroup').style.display = type === 'image' ? 'block' : 'none';
+}
+
+function copyApiLink(token) {
+    const url = `${window.location.origin}/api/cheat/${token}`;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('API Link copied!');
+    });
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

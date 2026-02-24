@@ -1,0 +1,128 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-cog"></i> Site Settings</h1>
+    <p>Configure site links and options</p>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-globe"></i>
+        <div>
+            <h3>General Settings</h3>
+            <p class="section-desc">Basic site configuration</p>
+        </div>
+    </div>
+    <form method="POST" class="settings-form">
+        <div class="form-group">
+            <label for="website_name">
+                <i class="fas fa-signature"></i> Website Name:
+            </label>
+            <input type="text" id="website_name" name="website_name" class="input-field" value="{{ settings.website_name or 'Phook+' }}" placeholder="Phook+">
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <h4 class="form-section-title"><i class="fas fa-coins"></i> LC Coins</h4>
+        
+        <div class="form-group">
+            <label for="coin_rate">
+                <i class="fas fa-exchange-alt"></i> Coin Rate (LC per $1):
+            </label>
+            <input type="number" id="coin_rate" name="coin_rate" class="input-field" value="{{ settings.coin_rate or '98' }}" placeholder="98" min="1">
+            <small class="form-hint">How many LC coins equal $1 USD</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="daily_coins">
+                <i class="fas fa-gift"></i> Daily Reward (LC):
+            </label>
+            <input type="number" id="daily_coins" name="daily_coins" class="input-field" value="{{ settings.daily_coins or '10' }}" placeholder="10" min="1">
+            <small class="form-hint">Base coins given for daily claim</small>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <h4 class="form-section-title"><i class="fas fa-dice"></i> Roulette</h4>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="roulette_enabled" value="1" {% if settings.roulette_enabled == '1' %}checked{% endif %}>
+                Enable Roulette for all users
+            </label>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <h4 class="form-section-title"><i class="fas fa-envelope-open-text"></i> Registration</h4>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="invite_required" value="1" {% if settings.invite_required == '1' %}checked{% endif %}>
+                Require invite code for registration
+            </label>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <h4 class="form-section-title"><i class="fas fa-link"></i> Social Links</h4>
+        
+        <div class="form-group">
+            <label for="discord_link">
+                <i class="fab fa-discord"></i> Discord:
+            </label>
+            <input type="url" id="discord_link" name="discord_link" class="input-field" value="{{ settings.discord_link }}" placeholder="https://discord.gg/...">
+        </div>
+        <div class="form-group">
+            <label for="telegram_link">
+                <i class="fab fa-telegram"></i> Telegram:
+            </label>
+            <input type="url" id="telegram_link" name="telegram_link" class="input-field" value="{{ settings.telegram_link }}" placeholder="https://t.me/...">
+        </div>
+        <div class="form-group">
+            <label for="youtube_link">
+                <i class="fab fa-youtube"></i> YouTube:
+            </label>
+            <input type="url" id="youtube_link" name="youtube_link" class="input-field" value="{{ settings.youtube_link or '' }}" placeholder="https://youtube.com/...">
+        </div>
+        <div class="form-group">
+            <label for="twitter_link">
+                <i class="fab fa-twitter"></i> Twitter/X:
+            </label>
+            <input type="url" id="twitter_link" name="twitter_link" class="input-field" value="{{ settings.twitter_link or '' }}" placeholder="https://twitter.com/...">
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-code"></i>
+        <div>
+            <h3>API Endpoints</h3>
+            <p class="section-desc">Available API for integration</p>
+        </div>
+    </div>
+    <div class="api-info">
+        <div class="api-item">
+            <h4>HWID Update</h4>
+            <code>POST /api/hwid</code>
+            <p>Send HWID from loader to server</p>
+            <pre>{"username": "user", "hwid": "XXXX-XXXX-XXXX"}</pre>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-hint {
+    display: block;
+    color: #6a6a6f;
+    font-size: 12px;
+    margin-top: 4px;
+}
+</style>
+{% endblock %}

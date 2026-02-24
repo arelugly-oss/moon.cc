@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Cloud{% endblock %}
+{% block content %}
+{% if has_subscription %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-upload"></i>
+        <div>
+            <h3>Upload Config</h3>
+            <p class="section-desc">Share your config with the community (max 3 per hour)</p>
+        </div>
+    </div>
+    <form method="POST" enctype="multipart/form-data" class="config-upload-form">
+        <input type="hidden" name="action" value="upload">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Config Name:</label>
+                <input type="text" name="name" class="input-field" placeholder="My awesome config">
+            </div>
+            <div class="form-group">
+                <label>File:</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" name="config_file" class="file-input-styled" id="configFileInput" required onchange="updateConfigFileName(this)">
+                    <label for="configFileInput" class="file-upload-btn">
+                        <i class="fas fa-file"></i> Choose File
+                    </label>
+                    <span id="configFileName" class="file-name">No file chosen</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Description:</label>
+            <textarea name="description" class="input-field textarea" placeholder="Describe your config..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-cloud-upload-alt"></i> Upload Config
+        </button>
+    </form>
+</div>
+
+{% if my_configs %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-folder-open"></i>
+        <div>
+            <h3>My Configs</h3>
+            <p class="section-desc">Your uploaded configurations</p>
+        </div>
+    </div>
+    <div class="configs-grid">
+        {% for config in my_configs %}
+        <div class="config-card my-config">
+            <div class="config-header">
+                <i class="fas fa-file-code"></i>
+                <div class="config-info">
+                    <h4>{{ config.name }}</h4>
+                    <span class="config-author">by {{ config.author }}</span>
+                </div>
+            </div>
+            {% if config.description %}
+            <p class="config-desc">{{ config.description }}</p>
+            {% endif %}
+            <div class="config-meta">
+                <span><i class="fas fa-download"></i> {{ config.downloads }}</span>
+                <span><i class="fas fa-clock"></i> {{ config.uploaded }}</span>
+            </div>
+            <div class="config-actions">
+                <a href="{{ url_for('download_config', config_id=config.id) }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="config_id" value="{{ config.id }}">
+                    <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Delete this config?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-cloud"></i>
+        <div>
+            <h3>Community Configs</h3>
+            <p class="section-desc">Configs shared by other users</p>
+        </div>
+    </div>
+    {% if configs %}
+    <div class="configs-grid">
+        {% for config in configs|reverse %}
+        <div class="config-card">
+            <div class="config-header">
+                <i class="fas fa-file-code"></i>
+                <div class="config-info">
+                    <h4>{{ config.name }}</h4>
+                    <span class="config-author">by {{ config.author }}</span>
+                </div>
+            </div>
+            {% if config.description %}
+            <p class="config-desc">{{ config.description }}</p>
+            {% endif %}
+            <div class="config-meta">
+                <span><i class="fas fa-download"></i> {{ config.downloads }}</span>
+                <span><i class="fas fa-clock"></i> {{ config.uploaded }}</span>
+            </div>
+            <div class="config-actions">
+                <a href="{{ url_for('download_config', config_id=config.id) }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>No configs available yet</p>
+        <span>Be the first to share your config!</span>
+    </div>
+    {% endif %}
+</div>
+
+{% else %}
+<div class="content-section">
+    <div class="no-subscription-block">
+        <div class="lock-icon">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h4>Subscription Required</h4>
+        <p>You need an active subscription to access cloud configs.</p>
+        <a href="{{ url_for('subscriptions') }}" class="btn btn-secondary">
+            <i class="fas fa-shopping-cart"></i> Get Subscription
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function updateConfigFileName(input) {
+    const fileName = input.files[0] ? input.files[0].name : 'No file chosen';
+    document.getElementById('configFileName').textContent = fileName;
+}
+</script>
+{% endblock %}

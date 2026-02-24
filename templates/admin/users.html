@@ -1,0 +1,76 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-users"></i> User Management</h1>
+    <p>Manage all registered users ({{ users|length }} total)</p>
+</div>
+
+<div class="content-section">
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>UID</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Last IP</th>
+                    <th>Subs</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for uname, udata in users.items() %}
+                <tr>
+                    <td><span class="uid-badge">{{ udata.uid }}</span></td>
+                    <td>
+                        <div class="user-cell">
+                            {% if udata.avatar %}
+                            <img src="{{ udata.avatar }}" class="user-avatar-small-img" alt="">
+                            {% else %}
+                            <div class="user-avatar-small">{{ uname[0]|upper }}</div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ uname }}</strong>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ udata.email or '-' }}</td>
+                    <td>{{ udata.joined }}</td>
+                    <td><code class="ip-code">{{ udata.last_ip or '-' }}</code></td>
+                    <td>{{ udata.subscriptions|length }}</td>
+                    <td>
+                        {% if udata.is_admin %}
+                        <span class="badge badge-admin"><i class="fas fa-crown"></i></span>
+                        {% else %}
+                        <span class="badge badge-user">User</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ url_for('admin_user_detail', target_user=uname) }}" class="btn-icon" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('toggle_admin', target_user=uname) }}" style="display:inline;">
+                                <button type="submit" class="btn-icon" title="Toggle Admin">
+                                    <i class="fas fa-user-shield"></i>
+                                </button>
+                            </form>
+                            {% if uname != username %}
+                            <form method="POST" action="{{ url_for('delete_user', target_user=uname) }}" style="display:inline;" onsubmit="return confirm('Delete?')">
+                                <button type="submit" class="btn-icon btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Security{% endblock %}
+{% block content %}
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-user-edit"></i>
+        <div>
+            <h3>Profile Settings</h3>
+            <p class="section-desc">Update your profile information</p>
+        </div>
+    </div>
+    <form method="POST" class="profile-form">
+        <input type="hidden" name="action" value="change_profile">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nickname">Username:</label>
+                <input type="text" id="nickname" name="nickname" class="input-field" value="{{ username }}" placeholder="Your username">
+            </div>
+            <div class="form-group">
+                <label for="uid">UID:</label>
+                <input type="text" class="input-field" value="{{ user.uid }}" disabled>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" class="input-field" value="{{ user.email or '' }}" placeholder="Your email">
+        </div>
+        <div class="form-group">
+            <label for="bio">Bio / Description:</label>
+            <textarea id="bio" name="bio" class="input-field textarea" placeholder="Tell us about yourself...">{{ user.bio or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-save"></i> Save Profile
+        </button>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-image"></i>
+        <div>
+            <h3>Avatar</h3>
+            <p class="section-desc">Change your profile picture</p>
+        </div>
+    </div>
+    <form method="POST" enctype="multipart/form-data" class="avatar-form">
+        <input type="hidden" name="action" value="change_avatar">
+        <div class="avatar-preview-section">
+            <div class="avatar-preview">
+                {% if user.avatar %}
+                <img src="{{ user.avatar }}" alt="Avatar" onerror="this.src='https://via.placeholder.com/100/1a1a2e/ffffff?text={{ username[0]|upper }}'">
+                {% else %}
+                <div class="avatar-placeholder">{{ username[0]|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="avatar-input">
+                <div class="form-group">
+                    <label>Upload Image:</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" name="avatar_file" accept="image/*" class="file-input-styled" id="avatarFileInput" onchange="previewAvatar(this)">
+                        <label for="avatarFileInput" class="file-upload-btn">
+                            <i class="fas fa-upload"></i> Choose File
+                        </label>
+                        <span id="avatarFileName" class="file-name">No file chosen</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="avatar_url">Or paste URL:</label>
+                    <input type="url" id="avatar_url" name="avatar_url" class="input-field" value="{{ user.avatar or '' }}" placeholder="https://example.com/avatar.png">
+                </div>
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-save"></i> Update Avatar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-lock"></i>
+        <div>
+            <h3>Change Password</h3>
+            <p class="section-desc">Update your account password securely.</p>
+        </div>
+    </div>
+    <form method="POST" class="password-form">
+        <input type="hidden" name="action" value="change_password">
+        <div class="form-group">
+            <label for="old_password">Old Password:</label>
+            <input type="password" id="old_password" name="old_password" class="input-field" required>
+        </div>
+        <div class="form-group">
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password" class="input-field" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm New Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="input-field" required>
+        </div>
+        <button type="submit" class="btn btn-outline">Change Password</button>
+    </form>
+</div>
+
+<script>
+function previewAvatar(input) {
+    const fileName = input.files[0] ? input.files[0].name : 'No file chosen';
+    document.getElementById('avatarFileName').textContent = fileName;
+}
+</script>
+{% endblock %}

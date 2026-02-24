@@ -1,0 +1,195 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}User: {{ target_user }}{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <a href="{{ url_for('admin_users') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Users</a>
+    <h1><i class="fas fa-user"></i> {{ target_user }}</h1>
+    <p>User details and management</p>
+</div>
+
+<div class="user-detail-grid">
+    <div class="content-section user-profile-card">
+        <div class="user-detail-avatar">
+            {% if target.avatar %}
+            <img src="{{ target.avatar }}" alt="Avatar">
+            {% else %}
+            <div class="avatar-placeholder-large">{{ target_user[0]|upper }}</div>
+            {% endif %}
+        </div>
+        <h2>{{ target_user }}</h2>
+        <p class="uid-large">UID: {{ target.uid }}</p>
+        {% if target.is_admin %}
+        <span class="badge badge-admin"><i class="fas fa-crown"></i> Administrator</span>
+        {% endif %}
+        {% if target.bio %}
+        <p class="user-bio-detail">{{ target.bio }}</p>
+        {% endif %}
+    </div>
+
+    <div class="content-section">
+        <div class="section-header">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <h3>Account Information</h3>
+                <p class="section-desc">User account details</p>
+            </div>
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ target.email or 'Not set' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Joined</span>
+                <span class="info-value">{{ target.joined }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Last Login</span>
+                <span class="info-value">{{ target.last_login or 'Never' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Registration IP</span>
+                <span class="info-value"><code>{{ target.ip or 'Unknown' }}</code></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Last IP</span>
+                <span class="info-value"><code>{{ target.last_ip or 'Unknown' }}</code></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">HWID</span>
+                <span class="info-value">
+                    {% if target.hwid %}
+                    <code class="hwid-code">{{ target.hwid }}</code>
+                    {% else %}
+                    <span class="text-muted">Not received</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Last Roulette Spin</span>
+                <span class="info-value">{{ target.last_spin or 'Never' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">LC Coins</span>
+                <span class="info-value"><strong>{{ target.coins or 0 }}</strong> LC</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Login Streak</span>
+                <span class="info-value">{{ target.login_streak or 0 }} days</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Avatar URL</span>
+                <span class="info-value">{{ target.avatar or 'Not set' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-shopping-bag"></i>
+        <div>
+            <h3>Subscriptions</h3>
+            <p class="section-desc">User's active and expired subscriptions</p>
+        </div>
+    </div>
+    
+    {% if target.subscriptions %}
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Cheat</th>
+                    <th>Game</th>
+                    <th>Activated</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in target.subscriptions %}
+                <tr>
+                    <td><strong>{{ sub.cheat_name }}</strong></td>
+                    <td>{{ sub.game }}</td>
+                    <td>{{ sub.activated }}</td>
+                    <td>{{ sub.expires }}</td>
+                    <td>
+                        {% if sub.is_active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-inactive">Expired</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('remove_subscription', target_user=target_user, sub_idx=loop.index0) }}" onsubmit="return confirm('Remove this subscription?')">
+                            <button type="submit" class="btn-icon btn-danger"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No subscriptions</p>
+    {% endif %}
+
+    <div class="give-sub-section">
+        <h4>Give Subscription</h4>
+        <form method="POST" action="{{ url_for('give_subscription', target_user=target_user) }}" class="inline-form">
+            <select name="cheat_id" class="input-field" required>
+                <option value="">Select cheat</option>
+                {% for cheat in cheats %}
+                <option value="{{ cheat.id }}">{{ cheat.name }} ({{ cheat.game }})</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="days" value="30" min="1" max="365" class="input-field" style="width:100px" placeholder="Days">
+            <button type="submit" class="btn btn-secondary"><i class="fas fa-plus"></i> Give</button>
+        </form>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-cog"></i>
+        <div>
+            <h3>Actions</h3>
+            <p class="section-desc">Manage this user</p>
+        </div>
+    </div>
+    <div class="action-buttons-row">
+        <form method="POST" action="{{ url_for('toggle_admin', target_user=target_user) }}">
+            <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-user-shield"></i>
+                {% if target.is_admin %}Remove Admin{% else %}Make Admin{% endif %}
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('reset_roulette_cooldown', target_user=target_user) }}">
+            <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-dice"></i> Reset Roulette Cooldown
+            </button>
+        </form>
+        {% if target_user != username %}
+        <form method="POST" action="{{ url_for('delete_user', target_user=target_user) }}" onsubmit="return confirm('Delete this user permanently?')">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete User
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    
+    <div class="coins-management" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2f;">
+        <h4 style="margin-bottom: 12px;"><i class="fas fa-coins"></i> Manage LC Coins</h4>
+        <form method="POST" action="{{ url_for('modify_user_coins', target_user=target_user) }}" class="inline-form">
+            <select name="action" class="input-field" style="width: 120px;">
+                <option value="add">Add</option>
+                <option value="remove">Remove</option>
+                <option value="set">Set to</option>
+            </select>
+            <input type="number" name="amount" value="100" min="0" class="input-field" style="width: 120px;" placeholder="Amount">
+            <button type="submit" class="btn btn-secondary"><i class="fas fa-coins"></i> Apply</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

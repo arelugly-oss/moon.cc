@@ -1,0 +1,173 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+    <p>Welcome back, {{ username }}</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ data.users|length }}</span>
+            <span class="stat-label">Total Users</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ total_subs }}</span>
+            <span class="stat-label">Active Subscriptions</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-download"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.downloads or 0 }}</span>
+            <span class="stat-label">Downloads</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-key"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.keys_activated or 0 }}</span>
+            <span class="stat-label">Keys Activated</span>
+        </div>
+    </div>
+</div>
+
+<div class="charts-row">
+    <div class="content-section chart-section">
+        <div class="section-header">
+            <i class="fas fa-chart-line"></i>
+            <div>
+                <h3>Registrations (7 days)</h3>
+                <p class="section-desc">New user registrations</p>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="regChart"></canvas>
+        </div>
+    </div>
+    <div class="content-section chart-section">
+        <div class="section-header">
+            <i class="fas fa-chart-bar"></i>
+            <div>
+                <h3>Logins (7 days)</h3>
+                <p class="section-desc">User login activity</p>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="loginChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-clock"></i>
+        <div>
+            <h3>Recent Users</h3>
+            <p class="section-desc">Latest registered users</p>
+        </div>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>UID</th>
+                    <th>Username</th>
+                    <th>Joined</th>
+                    <th>Last Login</th>
+                    <th>Subscriptions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for uname, udata in data.users.items()|list|reverse %}
+                {% if loop.index <= 5 %}
+                <tr>
+                    <td><span class="uid-badge">{{ udata.uid }}</span></td>
+                    <td>
+                        {{ uname }}
+                        {% if udata.is_admin %}<span class="badge badge-admin">Admin</span>{% endif %}
+                    </td>
+                    <td>{{ udata.joined }}</td>
+                    <td>{{ udata.last_login or '-' }}</td>
+                    <td>{{ udata.subscriptions|length }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="content-section">
+    <div class="section-header">
+        <i class="fas fa-link"></i>
+        <div>
+            <h3>Quick Links</h3>
+            <p class="section-desc">Current site links</p>
+        </div>
+    </div>
+    <div class="quick-links">
+        <div class="link-item">
+            <i class="fab fa-discord"></i>
+            <span>Discord:</span>
+            <a href="{{ data.settings.discord_link }}">{{ data.settings.discord_link }}</a>
+        </div>
+        <div class="link-item">
+            <i class="fab fa-telegram"></i>
+            <span>Telegram:</span>
+            <a href="{{ data.settings.telegram_link }}">{{ data.settings.telegram_link }}</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const chartLabels = {{ chart_labels|tojson }};
+const regData = {{ reg_data|tojson }};
+const loginData = {{ login_data|tojson }};
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a8a8f' } },
+        x: { grid: { display: false }, ticks: { color: '#8a8a8f' } }
+    }
+};
+
+new Chart(document.getElementById('regChart'), {
+    type: 'line',
+    data: {
+        labels: chartLabels,
+        datasets: [{
+            data: regData,
+            borderColor: '#ffffff',
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: chartOptions
+});
+
+new Chart(document.getElementById('loginChart'), {
+    type: 'bar',
+    data: {
+        labels: chartLabels,
+        datasets: [{
+            data: loginData,
+            backgroundColor: 'rgba(255,255,255,0.3)',
+            borderColor: '#ffffff',
+            borderWidth: 1
+        }]
+    },
+    options: chartOptions
+});
+</script>
+{% endblock %}
